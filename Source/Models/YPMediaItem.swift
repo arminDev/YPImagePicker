@@ -16,14 +16,12 @@ public class YPMediaPhoto {
     public var image: UIImage { return modifiedImage ?? originalImage }
     public let originalImage: UIImage
     public var modifiedImage: UIImage?
-    public let fromCamera: Bool
     public let exifMeta: [String: Any]?
     public var asset: PHAsset?
     
-    public init(image: UIImage, exifMeta: [String: Any]? = nil, fromCamera: Bool = false, asset: PHAsset? = nil) {
+    public init(image: UIImage, exifMeta: [String: Any]? = nil, asset: PHAsset? = nil) {
         self.originalImage = image
         self.modifiedImage = nil
-        self.fromCamera = fromCamera
         self.exifMeta = exifMeta
         self.asset = asset
     }

@@ -81,9 +81,6 @@ class ExampleViewController: UIViewController {
         /* Choose what media types are available in the library. Defaults to `.photo` */
         config.library.mediaType = .photo
 
-        /* Enables selecting the front camera by default, useful for avatars. Defaults to false */
-         config.usesFrontCamera = true
-
         /* Adds a Filter step in the photo taking process. Defaults to true */
         // config.showsFilters = false
 

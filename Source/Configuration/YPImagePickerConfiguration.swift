@@ -33,12 +33,6 @@ public struct YPImagePickerConfiguration {
     /// Use this property to modify the default colors provided.
     public var colors = YPColors()
     
-    /// Set this to true if you want to force the camera output to be a squared image. Defaults to true
-    public var onlySquareImagesFromCamera = true
-    
-    /// Enables selecting the front camera by default, useful for avatars. Defaults to false
-    public var usesFrontCamera = false
-    
     /// Adds a Filter step in the photo taking process.  Defaults to true
     public var showsPhotoFilters = true
     
@@ -67,10 +61,7 @@ public struct YPImagePickerConfiguration {
     /// Ex: cappedTo:1024 will make sure images from the library or the camera will be
     /// resized to fit in a 1024x1024 box. Defaults to original image size.
     public var targetImageSize = YPImageSize.original
-    
-    /// Adds a Overlay View to the camera
-    public var overlayView: UIView?
-    
+
     /// Defines if the status bar should be hidden when showing the picker. Default is true
     public var hidesStatusBar = true
     

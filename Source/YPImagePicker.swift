@@ -93,7 +93,7 @@ override open func viewDidLoad() {
                     // Save new image or existing but modified, to the photo album.
                     if YPConfig.shouldSaveNewPicturesToAlbum {
                         let isModified = photo.modifiedImage != nil
-                        if photo.fromCamera || (!photo.fromCamera && isModified) {
+                        if isModified {
                             YPPhotoSaver.trySaveImage(photo.image, inAlbumNamed: YPConfig.albumName)
                         }
                     }
