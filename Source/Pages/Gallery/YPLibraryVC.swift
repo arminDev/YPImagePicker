@@ -9,7 +9,7 @@
 import UIKit
 import Photos
 
-public class YPLibraryVC: UIViewController, YPPermissionCheckable {
+public class YPLibraryVC: UIViewController {
     
     internal weak var delegate: YPLibraryViewDelegate?
     internal var v: YPLibraryView!
@@ -394,7 +394,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             
             // Multiple selection
             if self.multipleSelectionEnabled && self.selection.count > 1 {
-                                
+
                 // Fill result media items array
                 var resultMediaItems: [YPMediaItem] = []
                 let asyncGroup = DispatchGroup()

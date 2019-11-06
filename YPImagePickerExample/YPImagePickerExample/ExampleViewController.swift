@@ -8,7 +8,6 @@
 
 import UIKit
 import YPImagePicker
-import AVFoundation
 import AVKit
 import Photos
 

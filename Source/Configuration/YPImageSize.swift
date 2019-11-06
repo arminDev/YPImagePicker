@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import AVFoundation
+import CoreGraphics
 
 public enum YPImageSize {
     case original
