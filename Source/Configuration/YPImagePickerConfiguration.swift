@@ -24,10 +24,7 @@ public struct YPImagePickerConfiguration {
     
     // Library configuration
     public var library = YPConfigLibrary()
-    
-    // Video configuration
-    public var video = YPConfigVideo()
-    
+        
     /// Use this property to modify the default wordings provided.
     public var wordings = YPWordings()
     
@@ -59,11 +56,11 @@ public struct YPImagePickerConfiguration {
     
     /// Defines which screen is shown at launch. Video mode will only work if `showsVideo = true`.
     /// Default value is `.photo`
-    public var startOnScreen: YPPickerScreen = .photo
+    public var startOnScreen: YPPickerScreen = .library
     
     /// Defines which screens are shown at launch, and their order.
     /// Default value is `[.library, .photo]`
-    public var screens: [YPPickerScreen] = [.library, .photo]
+    public var screens: [YPPickerScreen] = [.library]
 
     /// Adds a Crop step in the photo taking process, after filters.  Defaults to .none
     public var showsCrop: YPCropType = .none
@@ -112,22 +109,7 @@ public struct YPImagePickerConfiguration {
         ]
     
     /// Migration
-    
-    @available(iOS, obsoleted: 3.0.0, renamed: "video.compression")
-    public var videoCompression: String = AVAssetExportPresetHighestQuality
-    
-    @available(iOS, obsoleted: 3.0.0, renamed: "video.fileType")
-    public var videoExtension: AVFileType = .mov
-    
-    @available(iOS, obsoleted: 3.0.0, renamed: "video.recordingTimeLimit")
-    public var videoRecordingTimeLimit: TimeInterval = 60.0
-    
-    @available(iOS, obsoleted: 3.0.0, renamed: "video.libraryTimeLimit")
-    public var videoFromLibraryTimeLimit: TimeInterval = 60.0
-    
-    @available(iOS, obsoleted: 3.0.0, renamed: "video.minimumTimeLimit")
-    public var videoMinimumTimeLimit: TimeInterval = 3.0
-    
+
     @available(iOS, obsoleted: 3.0.0, renamed: "video.trimmerMaxDuration")
     public var trimmerMaxDuration: Double = 60.0
 
@@ -191,37 +173,6 @@ public struct YPConfigLibrary {
     public var preselectedItems: [YPMediaItem]?
 }
 
-/// Encapsulates video specific settings.
-public struct YPConfigVideo {
-    
-    /// Choose the videoCompression.  Defaults to AVAssetExportPresetHighestQuality
-    public var compression: String = AVAssetExportPresetHighestQuality
-    
-    /// Choose the result video extension if you trim or compress a video. Defaults to mov.
-    public var fileType: AVFileType = .mov
-    
-    /// Defines the time limit for recording videos.
-    /// Default is 60 seconds.
-    public var recordingTimeLimit: TimeInterval = 60.0
-    
-    /// Defines the time limit for videos from the library.
-    /// Defaults to 60 seconds.
-    public var libraryTimeLimit: TimeInterval = 60.0
-    
-    /// Defines the minimum time for the video
-    /// Defaults to 3 seconds.
-    public var minimumTimeLimit: TimeInterval = 3.0
-    
-    /// The maximum duration allowed for the trimming. Change it before setting the asset, as the asset preview
-    public var trimmerMaxDuration: Double = 60.0
-    
-    /// The minimum duration allowed for the trimming.
-    /// The handles won't pan further if the minimum duration is attained.
-    public var trimmerMinDuration: Double = 3.0
-}
-
 public enum YPlibraryMediaType {
     case photo
-    case video
-    case photoAndVideo
 }

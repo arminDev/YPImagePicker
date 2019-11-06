@@ -19,9 +19,7 @@ protocol YPAssetZoomableViewDelegate: class {
 final class YPAssetZoomableView: UIScrollView {
     public weak var myDelegate: YPAssetZoomableViewDelegate?
     public var cropAreaDidChange = {}
-    public var isVideoMode = false
     public var photoImageView = UIImageView()
-    public var videoView = YPVideoView()
     public var squaredZoomScale: CGFloat = 1
     public var minWidth: CGFloat? = YPConfig.library.minWidthForItem
     
@@ -29,7 +27,7 @@ final class YPAssetZoomableView: UIScrollView {
     
     // Image view of the asset for convenience. Can be video preview image view or photo image view.
     public var assetImageView: UIImageView {
-        return isVideoMode ? videoView.previewImageView : photoImageView
+        return photoImageView
     }
 
     /// Set zoom scale to fit the image to square or show the full image
@@ -56,42 +54,7 @@ final class YPAssetZoomableView: UIScrollView {
             setContentOffset(contentOffset, animated: false)
         }
     }
-    
-    public func setVideo(_ video: PHAsset,
-                         mediaManager: LibraryMediaManager,
-                         storedCropPosition: YPLibrarySelection?,
-                         completion: @escaping () -> Void) {
-        mediaManager.imageManager?.fetchPreviewFor(video: video) { [weak self] preview in
-            guard let strongSelf = self else { return }
-            guard strongSelf.currentAsset != video else { completion() ; return }
-            
-            if strongSelf.videoView.isDescendant(of: strongSelf) == false {
-                strongSelf.isVideoMode = true
-                strongSelf.photoImageView.removeFromSuperview()
-                strongSelf.addSubview(strongSelf.videoView)
-            }
-            
-            strongSelf.videoView.setPreviewImage(preview)
-            
-            strongSelf.setAssetFrame(for: strongSelf.videoView, with: preview)
-            
-            completion()
-            
-            // Stored crop position in multiple selection
-            if let scp173 = storedCropPosition {
-                strongSelf.applyStoredCropPosition(scp173)
-            }
-        }
-        mediaManager.imageManager?.fetchPlayerItem(for: video) { [weak self] playerItem in
-            guard let strongSelf = self else { return }
-            guard strongSelf.currentAsset != video else { completion() ; return }
-            strongSelf.currentAsset = video
 
-            strongSelf.videoView.loadVideo(playerItem)
-            strongSelf.videoView.play()
-        }
-    }
-    
     public func setImage(_ photo: PHAsset,
                          mediaManager: LibraryMediaManager,
                          storedCropPosition: YPLibrarySelection?,
@@ -103,10 +66,6 @@ final class YPAssetZoomableView: UIScrollView {
             guard let strongSelf = self else { return }
             
             if strongSelf.photoImageView.isDescendant(of: strongSelf) == false {
-                strongSelf.isVideoMode = false
-                strongSelf.videoView.removeFromSuperview()
-                strongSelf.videoView.showPlayImage(show: false)
-                strongSelf.videoView.deallocate()
                 strongSelf.addSubview(strongSelf.photoImageView)
             
                 strongSelf.photoImageView.contentMode = .scaleAspectFill
@@ -187,7 +146,7 @@ final class YPAssetZoomableView: UIScrollView {
     
     // Centring the image frame
     fileprivate func centerAssetView() {
-        let assetView = isVideoMode ? videoView : photoImageView
+        let assetView = photoImageView
         let scrollViewBoundsSize = self.bounds.size
         var assetFrame = assetView.frame
         let assetSize = assetView.frame.size
@@ -206,7 +165,6 @@ final class YPAssetZoomableView: UIScrollView {
         frame.size = CGSize.zero
         clipsToBounds = true
         photoImageView.frame = CGRect(origin: CGPoint.zero, size: CGSize.zero)
-        videoView.frame = CGRect(origin: CGPoint.zero, size: CGSize.zero)
         maximumZoomScale = 6.0
         minimumZoomScale = 1
         showsHorizontalScrollIndicator = false
@@ -226,7 +184,7 @@ final class YPAssetZoomableView: UIScrollView {
 // MARK: UIScrollViewDelegate Protocol
 extension YPAssetZoomableView: UIScrollViewDelegate {
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
-        return isVideoMode ? videoView : photoImageView
+        return photoImageView
     }
     
     func scrollViewDidZoom(_ scrollView: UIScrollView) {
@@ -236,7 +194,7 @@ extension YPAssetZoomableView: UIScrollViewDelegate {
     }
     
     func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
-        guard let view = view, view == photoImageView || view == videoView else { return }
+        guard let view = view, view == photoImageView else { return }
         
         // prevent to zoom out
         if YPConfig.library.onlySquare && scale < squaredZoomScale {

@@ -73,8 +73,6 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 switch item {
                 case .photo(let photo):
                     itemAsset = photo.asset
-                case .video(let video):
-                    itemAsset = video.asset
                 }
                 guard let asset = itemAsset else {
                     return nil
@@ -139,8 +137,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
-        pausePlayer()
+
         NotificationCenter.default.removeObserver(self)
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
@@ -329,40 +326,14 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                                                   mediaManager: self.mediaManager,
                                                   storedCropPosition: self.fetchStoredCrop(),
                                                   completion: completion)
-            case .video:
-                self.v.assetZoomableView.setVideo(asset,
-                                                  mediaManager: self.mediaManager,
-                                                  storedCropPosition: self.fetchStoredCrop(),
-                                                  completion: completion)
-            case .audio, .unknown:
+            case .audio, .video, .unknown:
                 ()
             @unknown default:
                 fatalError()
             }
         }
     }
-    
-    // MARK: - Verification
-    
-    private func fitsVideoLengthLimits(asset: PHAsset) -> Bool {
-        guard asset.mediaType == .video else {
-            return true
-        }
-        
-        let tooLong = asset.duration > YPConfig.video.libraryTimeLimit
-        let tooShort = asset.duration < YPConfig.video.minimumTimeLimit
-        
-        if tooLong || tooShort {
-            DispatchQueue.main.async {
-                let alert = tooLong ? YPAlert.videoTooLongAlert(self.view) : YPAlert.videoTooShortAlert(self.view)
-                self.present(alert, animated: true, completion: nil)
-            }
-            return false
-        }
-        
-        return true
-    }
-    
+
     // MARK: - Stored Crop Position
     
     internal func updateCropInfo(shouldUpdateOnlyIfNil: Bool = false) {
@@ -411,26 +382,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         let ts = targetSize(for: asset, cropRect: cropRect)
         mediaManager.imageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
     }
-    
-    private func checkVideoLengthAndCrop(for asset: PHAsset,
-                                         withCropRect: CGRect? = nil,
-                                         callback: @escaping (_ videoURL: URL) -> Void) {
-        if fitsVideoLengthLimits(asset: asset) == true {
-            delegate?.libraryViewStartedLoading()
-            let normalizedCropRect = withCropRect ?? DispatchQueue.main.sync { v.currentCropRect() }
-            let ts = targetSize(for: asset, cropRect: normalizedCropRect)
-            let xCrop: CGFloat = normalizedCropRect.origin.x * CGFloat(asset.pixelWidth)
-            let yCrop: CGFloat = normalizedCropRect.origin.y * CGFloat(asset.pixelHeight)
-            let resultCropRect = CGRect(x: xCrop,
-                                        y: yCrop,
-                                        width: ts.width,
-                                        height: ts.height)
-            mediaManager.fetchVideoUrlAndCrop(for: asset, cropRect: resultCropRect, callback: callback)
-        }
-    }
-    
+
     public func selectedMedia(photoCallback: @escaping (_ photo: YPMediaPhoto) -> Void,
-                              videoCallback: @escaping (_ videoURL: YPMediaVideo) -> Void,
                               multipleItemsCallback: @escaping (_ items: [YPMediaItem]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             
@@ -441,14 +394,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             
             // Multiple selection
             if self.multipleSelectionEnabled && self.selection.count > 1 {
-                
-                // Check video length
-                for asset in selectedAssets {
-                    if self.fitsVideoLengthLimits(asset: asset.asset) == false {
-                        return
-                    }
-                }
-                
+                                
                 // Fill result media items array
                 var resultMediaItems: [YPMediaItem] = []
                 let asyncGroup = DispatchGroup()
@@ -463,14 +409,6 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                             resultMediaItems.append(YPMediaItem.photo(p: photo))
                             asyncGroup.leave()
                         }
-                        
-                    case .video:
-                        self.checkVideoLengthAndCrop(for: asset.asset, withCropRect: asset.cropRect) { videoURL in
-                            let videoItem = YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
-                                                         videoURL: videoURL, asset: asset.asset)
-                            resultMediaItems.append(YPMediaItem.video(v: videoItem))
-                            asyncGroup.leave()
-                        }
                     default:
                         break
                     }
@@ -483,17 +421,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         } else {
                 let asset = selectedAssets.first!.asset
                 switch asset.mediaType {
-                case .audio, .unknown:
+                case .audio, .video, .unknown:
                     return
-                case .video:
-                    self.checkVideoLengthAndCrop(for: asset, callback: { videoURL in
-                        DispatchQueue.main.async {
-                            self.delegate?.libraryViewFinishedLoading()
-                            let video = YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
-                                                     videoURL: videoURL, asset: asset)
-                            videoCallback(video)
-                        }
-                    })
                 case .image:
                     self.fetchImageAndCrop(for: asset) { image, exifMeta in
                         DispatchQueue.main.async {
@@ -521,13 +450,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         height = (height.truncatingRemainder(dividingBy: 2) == 0) ? height : height - 1
         return CGSize(width: width, height: height)
     }
-    
-    // MARK: - Player
-    
-    func pausePlayer() {
-        v.assetZoomableView.videoView.pause()
-    }
-    
+
     // MARK: - Deinit
     
     deinit {

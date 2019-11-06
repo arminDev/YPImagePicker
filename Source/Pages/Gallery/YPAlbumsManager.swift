@@ -79,13 +79,6 @@ extension YPlibraryMediaType {
         case .photo:
             return NSPredicate(format: "mediaType = %d",
                                PHAssetMediaType.image.rawValue)
-        case .video:
-            return NSPredicate(format: "mediaType = %d",
-                               PHAssetMediaType.video.rawValue)
-        case .photoAndVideo:
-            return NSPredicate(format: "mediaType = %d || mediaType = %d",
-                               PHAssetMediaType.image.rawValue,
-                               PHAssetMediaType.video.rawValue)
         }
     }
 }

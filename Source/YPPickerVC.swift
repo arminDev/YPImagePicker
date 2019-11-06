@@ -31,15 +31,11 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     
     enum Mode {
         case library
-        case camera
-        case video
     }
     
     private var libraryVC: YPLibraryVC?
-    private var cameraVC: YPCameraVC?
-    private var videoVC: YPVideoCaptureVC?
     
-    var mode = Mode.camera
+    var mode = Mode.library
     
     var capturedImage: UIImage?
     
@@ -60,27 +56,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             libraryVC = YPLibraryVC()
             libraryVC?.delegate = self
         }
-        
-        // Camera
-        if YPConfig.screens.contains(.photo) {
-            cameraVC = YPCameraVC()
-            cameraVC?.didCapturePhoto = { [weak self] img in
-                self?.didSelectItems?([YPMediaItem.photo(p: YPMediaPhoto(image: img,
-                                                                        fromCamera: true))])
-            }
-        }
-        
-        // Video
-        if YPConfig.screens.contains(.video) {
-            videoVC = YPVideoCaptureVC()
-            videoVC?.didCaptureVideo = { [weak self] videoURL in
-                self?.didSelectItems?([YPMediaItem
-                    .video(v: YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
-                                           videoURL: videoURL,
-                                           fromCamera: true))])
-            }
-        }
-        
+
         // Show screens
         var vcs = [UIViewController]()
         for screen in YPConfig.screens {
@@ -88,14 +64,6 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             case .library:
                 if let libraryVC = libraryVC {
                     vcs.append(libraryVC)
-                }
-            case .photo:
-                if let cameraVC = cameraVC {
-                    vcs.append(cameraVC)
-                }
-            case .video:
-                if let videoVC = videoVC {
-                    vcs.append(videoVC)
                 }
             }
         }
@@ -106,10 +74,6 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             switch YPConfig.startOnScreen {
             case .library:
                 mode = .library
-            case .photo:
-                mode = .camera
-            case .video:
-                mode = .video
             }
         }
         
@@ -124,7 +88,6 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        cameraVC?.v.shotButton.isEnabled = true
         
         updateMode(with: currentController)
     }
@@ -141,55 +104,28 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     internal func pagerScrollViewDidScroll(_ scrollView: UIScrollView) { }
     
     func modeFor(vc: UIViewController) -> Mode {
-        switch vc {
-        case is YPLibraryVC:
-            return .library
-        case is YPCameraVC:
-            return .camera
-        case is YPVideoCaptureVC:
-            return .video
-        default:
-            return .camera
-        }
+        return .library
     }
     
     func pagerDidSelectController(_ vc: UIViewController) {
         updateMode(with: vc)
     }
     
-    func updateMode(with vc: UIViewController) {
-        stopCurrentCamera()
-        
+    func updateMode(with vc: UIViewController) {        
         // Set new mode
         mode = modeFor(vc: vc)
         
         // Re-trigger permission check
         if let vc = vc as? YPLibraryVC {
             vc.checkPermission()
-        } else if let cameraVC = vc as? YPCameraVC {
-            cameraVC.start()
-        } else if let videoVC = vc as? YPVideoCaptureVC {
-            videoVC.start()
         }
     
         updateUI()
     }
-    
-    func stopCurrentCamera() {
-        switch mode {
-        case .library:
-            libraryVC?.pausePlayer()
-        case .camera:
-            cameraVC?.stopCamera()
-        case .video:
-            videoVC?.stopCamera()
-        }
-    }
-    
+
     open override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         shouldHideStatusBar = false
-        stopAll()
     }
     
     @objc
@@ -281,15 +217,6 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             
             // Disable Next Button until minNumberOfItems is reached.
             navigationItem.rightBarButtonItem?.isEnabled = libraryVC!.selection.count >= YPConfig.library.minNumberOfItems
-
-        case .camera:
-            navigationItem.titleView = nil
-            title = cameraVC?.title
-            navigationItem.rightBarButtonItem = nil
-        case .video:
-            navigationItem.titleView = nil
-            title = videoVC?.title
-            navigationItem.rightBarButtonItem = nil
         }
     }
     
@@ -311,20 +238,11 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             libraryVC.doAfterPermissionCheck { [weak self] in
                 libraryVC.selectedMedia(photoCallback: { photo in
                     self?.didSelectItems?([YPMediaItem.photo(p: photo)])
-                }, videoCallback: { video in
-                    self?.didSelectItems?([YPMediaItem
-                        .video(v: video)])
                 }, multipleItemsCallback: { items in
                     self?.didSelectItems?(items)
                 })
             }
         }
-    }
-    
-    func stopAll() {
-        libraryVC?.v.assetZoomableView.videoView.deallocate()
-        videoVC?.stopCamera()
-        cameraVC?.stopCamera()
     }
 }
 

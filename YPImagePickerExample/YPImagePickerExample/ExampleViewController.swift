@@ -80,10 +80,10 @@ class ExampleViewController: UIViewController {
         // config.targetImageSize = .cappedTo(size: 1024)
 
         /* Choose what media types are available in the library. Defaults to `.photo` */
-        config.library.mediaType = .photoAndVideo
+        config.library.mediaType = .photo
 
         /* Enables selecting the front camera by default, useful for avatars. Defaults to false */
-        // config.usesFrontCamera = true
+         config.usesFrontCamera = true
 
         /* Adds a Filter step in the photo taking process. Defaults to true */
         // config.showsFilters = false
@@ -98,9 +98,6 @@ class ExampleViewController: UIViewController {
            user's photo library. Defaults to true. */
         config.shouldSaveNewPicturesToAlbum = false
 
-        /* Choose the videoCompression. Defaults to AVAssetExportPresetHighestQuality */
-        config.video.compression = AVAssetExportPresetMediumQuality
-        
         /* Defines the name of the album when saving pictures in the user's photo library.
            In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName" */
         // config.albumName = "ThisIsMyAlbum"
@@ -111,18 +108,10 @@ class ExampleViewController: UIViewController {
 
         /* Defines which screens are shown at launch, and their order.
            Default value is `[.library, .photo]` */
-        config.screens = [.library, .photo, .video]
+        config.screens = [.library]
         
         /* Can forbid the items with very big height with this property */
 //        config.library.minWidthForItem = UIScreen.main.bounds.width * 0.8
-
-        /* Defines the time limit for recording videos.
-           Default is 30 seconds. */
-        // config.video.recordingTimeLimit = 5.0
-
-        /* Defines the time limit for videos from the library.
-           Defaults to 60 seconds. */
-        config.video.libraryTimeLimit = 500.0
 
         /* Adds a Crop step in the photo taking process, after filters. Defaults to .none */
         config.showsCrop = .rectangle(ratio: (16/9))
@@ -193,18 +182,6 @@ class ExampleViewController: UIViewController {
                 case .photo(let photo):
                     self.selectedImageV.image = photo.image
                     picker.dismiss(animated: true, completion: nil)
-                case .video(let video):
-                    self.selectedImageV.image = video.thumbnail
-                    
-                    let assetURL = video.url
-                    let playerVC = AVPlayerViewController()
-                    let player = AVPlayer(playerItem: AVPlayerItem(url:assetURL))
-                    playerVC.player = player
-                
-                    picker.dismiss(animated: true, completion: { [weak self] in
-                        self?.present(playerVC, animated: true, completion: nil)
-                        print("😀 \(String(describing: self?.resolutionForLocalVideo(url: assetURL)!))")
-                    })
                 }
             }
         }

@@ -10,6 +10,4 @@ import Foundation
 
 public enum YPPickerScreen {
     case library
-    case photo
-    case video
 }
